@@ -1,0 +1,36 @@
+1. Classification_JuliusFoverskov_XGBoost.txt:
+Algorithm: XGBClassifier
+HP: learning_rate=0.01, max_depth=10
+Validation accuracy: 94.05%
+Initially I ran XGBoost with all 160 variables and then used permutation importance to obtain the 15 most impactful features, 
+which were then used to train a new XGBTree. This algorithm seemed to perform reasonably well
+
+2. Classification_JuliusFoverskov_TF-NN.txt:
+Algorithm: tensorflow.keras
+HP: Nhidden1=15, Nhidden2=10, Nhidden3=10, LearningRate=0.01
+Validation accuracy: 74.64%
+I used the same features obtained from the XGBoost algorithm. Overall this solution seems rather poor, I'm guessing a lack of HP optimisation and data preprocessing is the main reason. 
+
+3. Regression_JuliusFoverskov_TF-NN.txt:
+Algorithm: tensorflow.keras
+HP: {'n_hidden1': 10, 'n_hidden2': 10, 'learning_rate': 0.066}
+val_mse: 2058843008.0000
+I used the same features obtained from the first XGBoost algorithm. I ran hyperparameter optimisation using the randomsearch algorithm implemented with the keras-tuner package.
+I'm unsure what a proper MSE value should be, but this does seem rather high.
+
+4. Regression_JuliusFoverskov_LightGBM.txt
+Algorithm: LightGBMRegressor
+HP: 'learning_rate': 0.01, 'num_leaves': 10, 'max_depth': 10
+val_mse = 1780767430
+I used the same features obtained from the first XGBoost algorithm.
+Again unsure what a proper MSE value should be. 
+
+
+5. Clustering_JuliusFoverskov_kMeans.txt
+Algorithm: kMeans
+HP: 5 centroids. 
+Top 5 features were selected from the initial xgboost classification. 
+Pre-processing: z-score standardisation
+I ran the algorithm 47 times, with 3-50 clusters. For each run I stored the distance between each cluster point to their centroid.
+From the resulting "elbow" plot there seemed no clear amount of clusters so n=5 was semi-arbitrarily chosen
+However the performance seemed really poor.

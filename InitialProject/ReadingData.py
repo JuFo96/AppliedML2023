@@ -49,7 +49,7 @@ all_variables = ['actualInteractionsPerCrossing', 'averageInteractionsPerCrossin
 
 # Finally, we divide the training data into data (`X`) and labels (`y`)
 
-# In[4]:
+# In[11]:
 
 
 X = train[all_variables]
@@ -69,4 +69,10 @@ print (f'Shape of y: {y.shape}')
 
 
 get_ipython().system('jupyter nbconvert --to script ReadingData.ipynb')
+
+
+# In[ ]:
+
+
+
 
