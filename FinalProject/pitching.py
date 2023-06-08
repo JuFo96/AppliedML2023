@@ -17,7 +17,7 @@ from sklearn.metrics import accuracy_score, classification_report, confusion_mat
 
 cache.enable()
 
-data = statcast(start_dt="2020-03-24", end_dt="2021-03-25")
+data = statcast(start_dt="2022-03-24", end_dt="2023-03-25")
 
 #%%
 
@@ -97,6 +97,7 @@ model = lgb.train(params, train_data)
 # Make predictions on the test set
 y_pred = model.predict(X_test.astype(float))
 y_pred_class = y_pred.argmax(axis=1)
+y_pred_train = model.predict(X_train.astype(float))
 
 # Evaluate the model
 accuracy = accuracy_score(y_test, y_pred_class)
@@ -119,5 +120,76 @@ plt.xlabel("Predicted Labels")
 plt.ylabel("True Labels")
 plt.show()
 
-fip_score = 
+lgb.plot_importance(model)
+#%%
+# Mapping of score labels to their respective values
+score_mapping = {
+    'ball': 5,
+    'blocked_ball': 5,
+    'called_strike': 8,
+    'foul': 5,
+    'hit_into_play': 6,
+    'other': 6,
+    'swinging_strike': 8
+}
 
+# Convert the score_mapping dictionary to a score_vector array
+score_vector = np.array([score_mapping[key] for key in score_mapping])
+
+# Calculate the sample scores for the test and train sets
+sample_score_test = np.dot(y_pred, score_vector)
+sample_score_train = np.dot(y_pred_train, score_vector)
+
+# Combine the test and train sets and assign pitch scores
+X_test["pitch_score"] = sample_score_test
+X_train["pitch_score"] = sample_score_train
+pitch_score_combined = pd.concat([X_test, X_train], axis=0, ignore_index=True)
+data["pitch_score"] = pitch_score_combined["pitch_score"]
+
+# Group the data by player name
+grouped = data.groupby("player_name")
+
+# Calculate the size of each group (number of occurrences per player)
+group_counts = grouped.size()
+
+# Filter groups based on a minimum count threshold (e.g., 300)
+filtered_groups = group_counts[group_counts >= group_counts.mean()/2]
+
+# Filter the data based on the player names in filtered_groups
+filtered_df = data[data['player_name'].isin(filtered_groups.index)]
+
+# Group the filtered data by player name
+group_player_filter = filtered_df.groupby(["player_name"])
+
+# Calculate the mean pitch score for each player
+pitch_score_player = group_player_filter["pitch_score"].mean()
+
+# Sort the players based on their mean pitch scores in descending order
+sorted_series = pitch_score_player.sort_values(ascending=False)
+
+# Print the sorted series of players and their mean pitch scores
+print(sorted_series)
+
+#%%
+
+# Convert the 'date' column to datetime type
+data['date'] = pd.to_datetime(data['game_date'])
+
+# Reference date (day 0)
+reference_date = data["date"].min()
+
+# Calculate the number of days since the reference date
+data['days_since_day0'] = (data['date'] - reference_date).dt.days
+
+avg_score_player_game_day = data[data["player_name"] == "Paxton, James"].groupby("days_since_day0").mean()["pitch_score"]
+pitches_in_one_game = data[data["player_name"] == "Paxton, James"].groupby("game_date")["pitch_score"]
+
+mask = (data["player_name"] == "Paxton, James") & (["days_since_day0"] == 40)
+
+
+plt.figure()
+plt.title("Gerret Cole")
+plt.ylabel("Pitch Score TM")
+plt.xlabel("days since season start")
+plt.ylim(5, 7)
+plt.plot(avg_score_player_game_day, 'o')

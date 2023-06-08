@@ -13,7 +13,7 @@ from pybaseball import statcast, lahman, cache
 
 cache.enable()
 
-data = statcast(start_dt="2020-05-24", end_dt="2021-06-25")
+data = statcast(start_dt="2021-05-24", end_dt="2021-06-25")
 
 # https://github.com/robotallie/baseball-injuries/blob/master/injuries.csv
 injuries = pd.read_csv("injuries.csv")
