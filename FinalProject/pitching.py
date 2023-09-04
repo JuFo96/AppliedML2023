@@ -9,7 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 from pybaseball import statcast, cache
-from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.preprocessing import LabelEncoder, StandardScaler, OneHotEncoder
 from sklearn.model_selection import train_test_split
 import seaborn as sns
 import lightgbm as lgb
@@ -17,7 +17,8 @@ from sklearn.metrics import accuracy_score, classification_report, confusion_mat
 
 cache.enable()
 
-data = statcast(start_dt="2022-03-24", end_dt="2023-03-25")
+#data = statcast(start_dt="2021-03-24", end_dt="2022-03-25")
+data = pd.read_csv("2017_2021_pitches.csv")
 
 #%%
 
@@ -118,19 +119,20 @@ sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", xticklabels = class_labels, y
 plt.title("Confusion Matrix")
 plt.xlabel("Predicted Labels")
 plt.ylabel("True Labels")
+plt.savefig("cm.png")
 plt.show()
 
 lgb.plot_importance(model)
 #%%
 # Mapping of score labels to their respective values
 score_mapping = {
-    'ball': 5,
-    'blocked_ball': 5,
-    'called_strike': 8,
-    'foul': 5,
-    'hit_into_play': 6,
-    'other': 6,
-    'swinging_strike': 8
+    'ball': -1.5,
+    'blocked_ball': -1.5,
+    'called_strike': 2,
+    'foul': 1,
+    'hit_into_play': 0,
+    'other': 0,
+    'swinging_strike': 1.5  
 }
 
 # Convert the score_mapping dictionary to a score_vector array
@@ -181,10 +183,13 @@ reference_date = data["date"].min()
 # Calculate the number of days since the reference date
 data['days_since_day0'] = (data['date'] - reference_date).dt.days
 
-avg_score_player_game_day = data[data["player_name"] == "Paxton, James"].groupby("days_since_day0").mean()["pitch_score"]
+
+name = "Verlander, Justin"
+
+avg_score_player_game_day = data[data["player_name"] == name].groupby("days_since_day0").mean()["pitch_score"]
 pitches_in_one_game = data[data["player_name"] == "Paxton, James"].groupby("game_date")["pitch_score"]
 
-mask = (data["player_name"] == "Paxton, James") & (["days_since_day0"] == 40)
+mask = (data["player_name"] == name)
 
 
 plt.figure()
